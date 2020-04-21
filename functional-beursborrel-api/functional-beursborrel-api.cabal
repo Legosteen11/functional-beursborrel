@@ -6,7 +6,7 @@ version:             0.1.0.0
 synopsis:            REST API for the functional beursborrel webapp
 -- description:
 homepage:            https://github.com/Legosteen11/functional-beursborrel
-license:             LGPL-3
+license:             AGPL-3
 license-file:        LICENSE
 author:              Wouter Doeland
 maintainer:          git@wouterdoeland.nl
@@ -31,7 +31,8 @@ executable functional-beursborrel-api
                        persistent-template,
                        http-types,
                        mtl,
-                       text
+                       text,
+                       time
   hs-source-dirs:      src
   default-language:    Haskell2010
 
