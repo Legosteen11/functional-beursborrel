@@ -32,9 +32,17 @@ import Database.Persist.Sqlite hiding (delete, get)
 import Database.Persist.TH
 import Network.HTTP.Types.Status
 
+-- Time
+import Data.Time.Clock
+import Data.Fixed
+
 -- Logging
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger
+
+-- List
+import Data.List (nub)
+import Data.List.Extra (groupSort, nubOrdOn)
 
 -- Models
 share
@@ -43,12 +51,25 @@ share
 Drink json
     name Text
     description Text
+    startPrice Double
     minPrice Double Maybe
     deriving Show
 BoughtDrink json
     drinkId DrinkId
+    price Double
+    amount Int
+    time UTCTime
     deriving Show
 |]
+
+-- JSON
+data Order = Order
+    {   drinks :: [(Int, Int)]
+    } deriving (Generic, Show)
+
+instance ToJSON Order
+
+instance FromJSON Order
 
 type Api = SpockM SqlBackend () () ()
 
@@ -69,7 +90,34 @@ app = do
         -- Return all drinks
         allDrinks <- runSQL $ selectList [] [Asc DrinkId]
         json allDrinks
-    post "drink" $ do
+    get ("drink" <//> var) $ \drinkId -> do
+        -- Return specific drink
+        maybeDrink <- runSQL $ P.get drinkId :: ApiAction (Maybe Drink)
+        case maybeDrink of
+            Nothing -> do
+                setStatus notFound404
+                errorJson 2 "Could not find a drink with matching id"
+            Just theDrink -> json theDrink
+    get "price" $ do
+        -- Return prices for drinks
+        boughtDrinks <- runSQL $ selectList [] [Desc BoughtDrinkTime, LimitTo 2]
+        currTime <- liftIO getCurrentTime
+        -- TODO Fetch default and minprice
+        let price = calculatePrice TimeDiffBasedPrice 0.50 0.50 boughtDrinks currTime
+        json $ object ["price" .= price]
+    put "admin/order" $ do
+        -- Place an order for drinks
+        maybeOrder <- jsonBody :: ApiAction (Maybe Order)
+        case maybeOrder of
+            Nothing -> do
+                setStatus badRequest400
+                errorJson 1 "Invalid JSON"
+            Just theOrder -> do
+                let drinkIds = nub $ drinks theOrder
+                boughtDrinkList <- runSQL $ selectList [] [Desc BoughtDrinkTime]
+                let prices = nubOrdOn (\(identifier, _) -> identifier) $ groupSort $ map (\(Entity _ e) -> (boughtDrinkDrinkId e, e)) boughtDrinkList
+                json $ object ["price" .= (0.5 :: Double)]
+    post "admin/drink" $ do
         -- Insert new drink
         maybeDrink <- jsonBody :: ApiAction (Maybe Drink)
         case maybeDrink of
@@ -80,14 +128,24 @@ app = do
                 newId <- runSQL $ insert theDrink
                 setStatus created201
                 json $ object ["result" .= String "success", "id" .= newId]
-    get ("drink" <//> var) $ \drinkId -> do
-        -- Return specific drink
-        maybeDrink <- runSQL $ P.get drinkId :: ApiAction (Maybe Drink)
-        case maybeDrink of
-            Nothing -> do
-                setStatus notFound404
-                errorJson 2 "Could not find a drink with matching id"
-            Just theDrink -> json theDrink
+
+data PriceAlgorithm = ConstantPrice | TimeDiffBasedPrice
+
+calculatePrice :: PriceAlgorithm -> Double -> Double -> [Entity BoughtDrink] -> UTCTime-> Double
+
+calculatePrice ConstantPrice defaultPrice _ _ _ = defaultPrice
+
+calculutePrice TimeDiffBasedPrice startPrice minPrice boughtDrinks currTime
+    | (length boughtDrinks) >= 2 = max minPrice (calcP (boughtDrinks !! 0) (boughtDrinks !! 1) currTime)
+    | otherwise = startPrice
+
+timeDiffRatio :: UTCTime -> UTCTime -> UTCTime -> Double
+timeDiffRatio a b curr = fromRational $ abDiff / aCurrTimeDiff
+    where   abDiff = toRational $ diffUTCTime a b
+            aCurrTimeDiff = toRational $ diffUTCTime a curr
+
+calcP :: Entity BoughtDrink -> Entity BoughtDrink -> UTCTime -> Double
+calcP (Entity _ a) (Entity _ b) currTime = timeDiffRatio (boughtDrinkTime a) (boughtDrinkTime b) currTime
 
 runSQL :: (HasSpock m, SpockConn m ~ SqlBackend)
     =>  SqlPersistT (LoggingT IO) a -> m a
