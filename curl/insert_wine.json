@@ -1,0 +1,6 @@
+{
+    "name": "Wine",
+    "description": "Rode wijn",
+    "startPrice": 0.60,
+    "minPrice": 0.30
+}
