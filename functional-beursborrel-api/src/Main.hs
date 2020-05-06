@@ -63,8 +63,17 @@ BoughtDrink json
 |]
 
 -- JSON
+data Item = Item
+    {   id :: Int
+    ,   amount :: Int
+    } deriving (Generic, Show)
+
+instance ToJSON Item
+
+instance FromJSON Item
+
 data Order = Order
-    {   drinks :: [(Int, Int)]
+    {   drinks :: [Item]
     } deriving (Generic, Show)
 
 instance ToJSON Order
@@ -113,7 +122,6 @@ app = do
                 setStatus badRequest400
                 errorJson 1 "Invalid JSON"
             Just theOrder -> do
-                let drinkIds = nub $ drinks theOrder
                 boughtDrinkList <- runSQL $ selectList [] [Desc BoughtDrinkTime]
                 let prices = nubOrdOn (\(identifier, _) -> identifier) $ groupSort $ map (\(Entity _ e) -> (boughtDrinkDrinkId e, e)) boughtDrinkList
                 json $ object ["price" .= (0.5 :: Double)]
