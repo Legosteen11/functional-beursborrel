@@ -1,12 +1,12 @@
-module Msg exposing (..)
+module Msg exposing (Msg)
 
 import Browser
-import Home
-import Admin
+import Url
+import Drink exposing (DrinkList)
+import Http
 
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | HomeMsg Home.Msg
-    | AdminMsg Admin.Msg
+    | GotDrinks (Result Http.Error DrinkList)
     | None

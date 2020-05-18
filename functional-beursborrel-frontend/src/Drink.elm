@@ -1,4 +1,4 @@
-module Drink exposing (Data)
+module Drink exposing (Data, DrinkList)
 
 type alias Data =
     { id: Int
@@ -7,3 +7,6 @@ type alias Data =
     , startPrice : Float
     , price : Float
     }
+
+type alias DrinkList =
+    List Data
