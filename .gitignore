@@ -22,5 +22,9 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
+ghcid.txt
 # SQLite
 *.db*
+
+# Elm
+elm-stuff/
