@@ -36,7 +36,7 @@ init _ _ key =
             , page = Home (Home.Loading initSession)
             }
     in
-    (mdl, Cmd.none)
+    stepHome mdl (Home.init initSession)
 
 
 main : Program Flags Model Msg

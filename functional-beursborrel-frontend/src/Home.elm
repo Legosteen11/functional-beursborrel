@@ -1,4 +1,4 @@
-module Home exposing (Model (..), Msg, init, subscriptions, update, view, exit)
+module Home exposing (Model (..), Msg (..), init, subscriptions, update, view, exit)
 
 import Element exposing (Element, text, column)
 import Element.Input as Input
