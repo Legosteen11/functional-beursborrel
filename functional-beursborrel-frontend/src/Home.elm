@@ -1,29 +1,39 @@
-module Home exposing (Model, Msg, init, subscriptions, update, view)
+module Home exposing (Model (..), init, subscriptions, update, view, exit)
 
 import Element exposing (Element, text, column)
 import Element.Input as Input
+import Msg exposing (..)
 import Drink exposing (DrinkList)
 import Fetch exposing (getDrinks)
 import List exposing (map)
+import Session
 import String exposing (fromFloat)
 
 
 type Model
-    = Failure
-    | Loading
-    | Success (DrinkList)
+    = Failure Session.Data
+    | Loading Session.Data
+    | Success Session.Data (DrinkList)
 
 
-type Msg
-    = None
-    | Update
-
-
-init : () -> (Model, Cmd Msg)
-init _ =
-    ( Loading
+init : Session.Data -> (Model, Cmd Msg)
+init data =
+    ( Loading data
     , getDrinks
     )
+
+
+exit : Model -> Session.Data
+exit model =
+    case model of
+        Failure data ->
+            data
+    
+        Loading data ->
+            data
+
+        Success data _ ->
+            data
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -32,23 +42,26 @@ update msg model =
         None ->
             (model, Cmd.none)
             
-        Update ->
-            (Loading, getDrinks)
+        UpdateDrinks ->
+            (Loading (exit model), getDrinks)
 
         GotDrinks result ->
             case result of
                 Ok drinks ->
-                    (Success drinks, Cmd.none)
+                    (Success (exit model) drinks, Cmd.none)
                 
                 Err _ ->
-                    (Failure, Cmd.none)
+                    (Failure (exit model), Cmd.none)
+        
+        _ ->
+            (model, Cmd.none)
 
 
 view : Model -> (String, List (Element Msg))
 view model =
     ( "Beursborrel"
     , [ renderDrinks model
-      , Input.button [] { onPress = Just Update, label = text "Update prices" }
+      , Input.button [] { onPress = Just UpdateDrinks, label = text "Update prices" }
       ]
     )
 
@@ -56,13 +69,13 @@ view model =
 renderDrinks : Model -> Element Msg
 renderDrinks model =
     case model of
-        Failure ->
+        Failure _ ->
             text "Could not load drinks"
         
-        Loading ->
+        Loading _ ->
             text "Loading drinks..."
 
-        Success drinks ->
+        Success _ drinks ->
             column [] (map renderDrink drinks)
 
 

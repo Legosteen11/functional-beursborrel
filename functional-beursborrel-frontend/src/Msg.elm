@@ -1,4 +1,4 @@
-module Msg exposing (Msg)
+module Msg exposing (..)
 
 import Browser
 import Url
@@ -9,4 +9,7 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | GotDrinks (Result Http.Error DrinkList)
+    | UpdateDrinks
+    | HomeMsg
+    | AdminMsg
     | None

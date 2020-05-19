@@ -1,6 +1,11 @@
 module Main exposing (main)
 
+import Msg exposing (..)
+import Home exposing (Model)
+import Admin
+import Base
 import Browser
+import Session
 import Browser.Navigation as Nav
 import Element exposing (..)
 import Url
@@ -22,20 +27,21 @@ type Page
     | AdminOrder Admin.Model
     | AdminListDrinks Admin.Model
     | AdminModifyDrink Admin.Model
-
-
-initialModel : Model
-initialModel =
-    Model 
-
-
-type Msg
-    = NoOp
+    | NotFound Session.Data
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ _ _ =
-    ( initialModel, Cmd.none )
+init _ _ key =
+    let
+        initSession =
+            Session.new
+        
+        mdl =
+            { key = key
+            , page = Home (Home.Loading initSession)
+            }
+    in
+    (mdl, Cmd.none)
 
 
 main : Program Flags Model Msg
@@ -45,8 +51,8 @@ main =
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlChange = \_ -> NoOp
-        , onUrlRequest = \_ -> NoOp
+        , onUrlChange = \_ -> None
+        , onUrlRequest = \_ -> None
         }
 
 
@@ -55,31 +61,32 @@ view model =
     let
         session =
             exit model
+        
+        toMsg msg _ =
+            msg
     in
     case model.page of
         Home home ->
+            Base.view session (toMsg Msg.HomeMsg) (Home.view home)
 
-        AdminLogin admin ->
+        -- AdminLogin admin ->
+        --     Base view session AdminMsg (Admin.view admin)
 
-        AdminOrder admin ->
+        -- AdminOrder admin ->
+        --     Base.view session AdminMsg (Admin.view admin)
 
-        AdminListDrinks admin ->
+        -- AdminListDrinks admin ->
+        --     Base.view session AdminMsg (Admin.view admin)
         
-        AdminModifyDrink admin ->
+        -- AdminModifyDrink admin ->
+        --     Base.view session AdminMsg (Admin.view admin)
 
-        NotFound _ -> 
+        _ ->
             { title = "Not found"
             , body = 
                 [ Element.layout [] <| Element.text "Page not found"
                 ]
             }
-    { title = "Example"
-    , body =
-        [ layout
-            []
-            (text "Hello World!")
-        ]
-    }
 
 
 exit : Model -> Session.Data
@@ -89,19 +96,19 @@ exit model =
             session
         
         Home m ->
-            m.session
+            Home.exit m
 
         AdminLogin m ->
-            m.session
+            (Admin.exit m).session
 
         AdminOrder m ->
-            m.session
+            (Admin.exit m).session
 
         AdminListDrinks m ->
-            m.session
+            (Admin.exit m).session
 
         AdminModifyDrink m ->
-            m.session
+            (Admin.exit m).session
 
 
 subscriptions : Model -> Sub Msg
@@ -113,5 +120,5 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     -- case Debug.log "msg" msg of
     case msg of
-        NoOp ->
+        _ ->
             ( model, Cmd.none )

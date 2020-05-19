@@ -1,7 +1,7 @@
 module Fetch exposing (getDrinks)
 
 import Http
-import Msg exposing (Msg)
+import Msg exposing (..)
 import Json.Decode exposing (Decoder, list, string, float, int, succeed)
 import Json.Decode.Pipeline exposing (required)
 import Drink exposing (DrinkList)
@@ -10,7 +10,7 @@ getDrinks : Cmd Msg
 getDrinks =
     Http.get
         { url = "/drink"
-        , expect = Http.expectJson Msg.GotDrinks drinkListDecoder
+        , expect = Http.expectJson GotDrinks drinkListDecoder
         }
 
 
