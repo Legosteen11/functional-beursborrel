@@ -3,9 +3,9 @@ module Home exposing (Model (..), Msg (..), init, subscriptions, update, view, e
 import Element exposing (Element, text, column, table, fill)
 import Element.Input as Input
 import Drink exposing (DrinkList, drinkListDecoder)
-import List exposing (map)
 import Session
 import Http
+import Urls
 import String exposing (fromFloat)
 
 
@@ -18,7 +18,7 @@ type Msg
 type Model
     = Failure Session.Data
     | Loading Session.Data
-    | Success Session.Data (DrinkList)
+    | Success Session.Data DrinkList
 
 
 init : Session.Data -> (Model, Cmd Msg)
@@ -105,6 +105,6 @@ subscriptions _ =
 getDrinks : Cmd Msg
 getDrinks =
     Http.get
-        { url = "http://localhost:8080/drink"
+        { url = Urls.drinkUrl
         , expect = Http.expectJson GotDrinks drinkListDecoder
         }
