@@ -1,6 +1,6 @@
 module Home exposing (Model (..), Msg (..), init, subscriptions, update, view, exit)
 
-import Element exposing (Element, text, column)
+import Element exposing (Element, text, column, table, fill)
 import Element.Input as Input
 import Drink exposing (DrinkList, drinkListDecoder)
 import List exposing (map)
@@ -78,12 +78,23 @@ renderDrinks model =
             text "Loading drinks..."
 
         Success _ drinks ->
-            column [] (map renderDrink drinks)
-
-
-renderDrink : Drink.Data -> Element Msg
-renderDrink drink =
-    text (drink.name ++ " costs " ++ fromFloat drink.price)
+            table [] 
+            { data = drinks
+            , columns =
+                [ { header = text "Item"
+                  , width = fill
+                  , view =
+                        \drink ->
+                            text drink.name
+                  }
+                , { header = text "Price"
+                  , width = fill
+                  , view =
+                        \drink ->
+                            text (fromFloat drink.price)
+                  }
+                ]                
+            }
 
 
 subscriptions : Model -> Sub Msg
