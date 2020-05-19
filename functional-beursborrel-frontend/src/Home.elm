@@ -1,13 +1,18 @@
-module Home exposing (Model (..), init, subscriptions, update, view, exit)
+module Home exposing (Model (..), Msg, init, subscriptions, update, view, exit)
 
 import Element exposing (Element, text, column)
 import Element.Input as Input
-import Msg exposing (..)
-import Drink exposing (DrinkList)
-import Fetch exposing (getDrinks)
+import Drink exposing (DrinkList, drinkListDecoder)
 import List exposing (map)
 import Session
+import Http
 import String exposing (fromFloat)
+
+
+type Msg
+    = None
+    | GotDrinks (Result Http.Error (DrinkList))
+    | Update
 
 
 type Model
@@ -42,7 +47,7 @@ update msg model =
         None ->
             (model, Cmd.none)
             
-        UpdateDrinks ->
+        Update ->
             (Loading (exit model), getDrinks)
 
         GotDrinks result ->
@@ -52,16 +57,13 @@ update msg model =
                 
                 Err _ ->
                     (Failure (exit model), Cmd.none)
-        
-        _ ->
-            (model, Cmd.none)
 
 
 view : Model -> (String, List (Element Msg))
 view model =
     ( "Beursborrel"
     , [ renderDrinks model
-      , Input.button [] { onPress = Just UpdateDrinks, label = text "Update prices" }
+      , Input.button [] { onPress = Just Update, label = text "Update prices" }
       ]
     )
 
@@ -87,3 +89,11 @@ renderDrink drink =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
+
+
+getDrinks : Cmd Msg
+getDrinks =
+    Http.get
+        { url = "http://localhost:8080/drink"
+        , expect = Http.expectJson GotDrinks drinkListDecoder
+        }

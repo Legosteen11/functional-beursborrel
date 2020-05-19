@@ -17,6 +17,7 @@
 import Web.Spock
 import Web.Spock.Config
 import Network.HTTP.Types.Status
+import Network.Wai.Middleware.Cors (simpleCors)
 
 -- Text and JSON data
 import Data.Aeson hiding (json)
@@ -94,6 +95,7 @@ main = do
 
 app :: SpockM SqlBackend () () ()
 app = do
+    middleware simpleCors
     -- drinks
     get "drink" $ do
         -- Return all drinks
