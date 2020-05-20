@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Msg exposing (..)
 import Home
+import Admin
 import Base
 import Browser
 import Session
@@ -22,6 +23,7 @@ type alias Model =
 
 type Page
     = Home Home.Model
+    | Admin Admin.Model
     | NotFound Session.Data
 
 
@@ -59,19 +61,10 @@ view model =
     in
     case model.page of
         Home home ->
-            Base.view session (Msg.HomeMsg) (Home.view home)
+            Base.view session Msg.HomeMsg (Home.view home)
 
-        -- AdminLogin admin ->
-        --     Base view session AdminMsg (Admin.view admin)
-
-        -- AdminOrder admin ->
-        --     Base.view session AdminMsg (Admin.view admin)
-
-        -- AdminListDrinks admin ->
-        --     Base.view session AdminMsg (Admin.view admin)
-        
-        -- AdminModifyDrink admin ->
-        --     Base.view session AdminMsg (Admin.view admin)
+        Admin admin ->
+            Base.view session Msg.AdminMsg (Admin.view admin)
 
         _ ->
             { title = "Not found"
@@ -86,21 +79,12 @@ exit model =
     case model.page of
         NotFound session ->
             session
-        
+
         Home m ->
             Home.exit m
 
-        -- AdminLogin m ->
-        --     (Admin.exit m).session
-
-        -- AdminOrder m ->
-        --     (Admin.exit m).session
-
-        -- AdminListDrinks m ->
-        --     (Admin.exit m).session
-
-        -- AdminModifyDrink m ->
-        --     (Admin.exit m).session
+        Admin m ->
+            Admin.exit m
 
 
 subscriptions : Model -> Sub Msg
@@ -124,6 +108,14 @@ update message model =
                 _ ->
                     (model, Cmd.none)
         
+        AdminMsg msg ->
+            case model.page of
+                Admin admin ->
+                    stepAdmin model (Admin.update msg admin)
+
+                _ ->
+                    (model, Cmd.none)
+
         _ ->
             (model, Cmd.none)
 
@@ -132,3 +124,9 @@ stepHome : Model -> (Home.Model, Cmd Home.Msg) -> (Model, Cmd Msg)
 stepHome model (home, cmd) =
     ( { model | page = Home home }
     , Cmd.map HomeMsg cmd)
+
+
+stepAdmin : Model -> (Admin.Model, Cmd Admin.Msg) -> (Model, Cmd Msg)
+stepAdmin model (admin, cmd) =
+    ( { model | page = Admin admin}
+    , Cmd.map AdminMsg cmd)
