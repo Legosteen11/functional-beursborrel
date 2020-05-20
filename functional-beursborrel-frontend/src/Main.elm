@@ -33,7 +33,7 @@ init _ _ key =
         
         mdl =
             { key = key
-            , page = Home (Home.Loading initSession)
+            , page = Home (Home.Loading initSession Nothing)
             }
     in
     stepHome mdl (Home.init initSession)
@@ -104,8 +104,13 @@ exit model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    case model.page of
+            Home home ->
+                Sub.map Msg.HomeMsg (Home.subscriptions home)
+
+            _ ->
+                Sub.none
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
