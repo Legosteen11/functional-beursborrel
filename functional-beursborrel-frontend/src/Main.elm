@@ -105,6 +105,9 @@ subscriptions model =
             Home home ->
                 Sub.map Msg.HomeMsg (Home.subscriptions home)
 
+            Admin admin ->
+                Sub.map Msg.AdminMsg (Admin.subscriptions admin)
+
             _ ->
                 Sub.none
 
