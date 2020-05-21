@@ -22,9 +22,9 @@ type Model
     | Order Session.Data DrinkList OrderList
 
 
-init : Session.Data -> (Model, Cmd Msg)
-init data =
-    ( Loading data Nothing Nothing
+init : Session.Data -> Maybe DrinkList -> (Model, Cmd Msg)
+init data maybeDrinks =
+    ( Loading data maybeDrinks Nothing
     , getDrinks
     )
 
@@ -83,8 +83,8 @@ view model =
         Order _ drinks order ->
             ( "Admin - Order"
             , [ renderOrder drinks order
-            , Input.button [] { onPress = Just Update, label = text "Update prices" } 
-            ]
+              , Input.button [] { onPress = Just Update, label = text "Update prices" } 
+              ]
             )
 
         _ ->

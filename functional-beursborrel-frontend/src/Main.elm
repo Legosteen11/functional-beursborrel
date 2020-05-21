@@ -6,6 +6,8 @@ import Admin
 import Base
 import Browser
 import Session
+import Url exposing (Url)
+import Browser exposing (UrlRequest)
 import Browser.Navigation as Nav
 import Element exposing (..)
 import Url
@@ -48,9 +50,19 @@ main =
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlChange = \_ -> None
+        , onUrlChange = urlChange
         , onUrlRequest = \_ -> None
         }
+
+
+urlChange : Url -> Msg
+urlChange _ =
+    AdminMsg Admin.Update
+
+
+urlRequest : UrlRequest -> Msg
+urlRequest _ =
+    AdminMsg Admin.Update
 
 
 view : Model -> Browser.Document Msg
@@ -113,8 +125,11 @@ update message model =
                 Admin admin ->
                     stepAdmin model (Admin.update msg admin)
 
+                Home home ->
+                    stepAdmin model (Admin.init (exit model) (Home.exitDrinks home))
+
                 _ ->
-                    (model, Cmd.none)
+                    stepAdmin model (Admin.init (exit model) Nothing)
 
         _ ->
             (model, Cmd.none)
